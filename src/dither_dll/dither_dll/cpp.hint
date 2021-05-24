@@ -1,0 +1,2 @@
+﻿#define DITHERDLL_API __declspec(dllexport)
+#define DITHERDLL_API __declspec(dllimport)
