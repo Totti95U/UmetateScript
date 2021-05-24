@@ -1,2 +1,2 @@
 # DitheringScript
-Dithering script for AviUtl
+Ordered Dithering (Pattern Dithering) script for AviUtl
