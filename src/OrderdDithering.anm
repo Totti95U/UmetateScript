@@ -8,4 +8,3 @@ OrderedDithering.dither(data, w, h, obj.track0)
 obj.putpixeldata(data)
 
 obj.effect("拡大率", "拡大率", 100/(1 - obj.track0 * 0.01))
-
