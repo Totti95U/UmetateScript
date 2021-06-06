@@ -1,0 +1,39 @@
+@Simple Dithering
+--track0:ドットサイズ,0,100,0,0.1
+
+obj.effect("リサイズ", "拡大率", 100 - obj.track0)
+
+require("OrderedDithering")
+local data, w, h = obj.getpixeldata()
+OrderedDithering.simpleDither(data, w, h)
+obj.putpixeldata(data)
+
+obj.effect("拡大率", "拡大率", 100/(1 - obj.track0 * 0.01))
+
+@Color Degreasing
+--track0:色数,1,256,16,1
+
+require("OrderedDithering")
+local data, w, h = obj.getpixeldata()
+OrderedDithering.degreaseColor(data, w, h, obj.track0)
+obj.putpixeldata(data)
+
+@Color Degreasing to W3C pallet
+
+require("OrderedDithering")
+local data, w, h = obj.getpixeldata()
+OrderedDithering.w3c_degreaseColor(data, w, h)
+obj.putpixeldata(data)
+
+@DitherComposer
+--track0:透明度,0,100,50
+--track1:ドットサイズ,0,100,0,0.1
+
+obj.effect("リサイズ", "拡大率", 100 - obj.track1)
+
+require("OrderedDithering")
+local data, w, h = obj.getpixeldata()
+OrderedDithering.ditherComposer(data, w, h, obj.track0)
+obj.putpixeldata(data)
+
+obj.effect("拡大率", "拡大率", 100/(1 - obj.track1 * 0.01))
