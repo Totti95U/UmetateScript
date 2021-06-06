@@ -14,5 +14,11 @@
 // Lua ヘッダー ファイル:
 #include "lua.hpp"
 
+// stdio
+#include <stdio.h>
+
+// Queue, Tuple ヘッダー ファイル
+#include <queue>
+#include <tuple>
 
 // TODO: プログラムに必要な追加ヘッダーをここで参照してください
