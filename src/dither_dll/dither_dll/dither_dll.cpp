@@ -14,6 +14,12 @@ struct Pixel_RGBA {
 	unsigned char a;
 };
 
+struct Pixel_RGB {
+	int b;
+	int g;
+	int r;
+};
+
 // Bayer 行列 ( 8 * 8 )
 static const unsigned char M[8 * 8] = {
 	 0,48,12,60, 3,51,15,63,
@@ -194,6 +200,19 @@ tuple<unsigned char, unsigned char, unsigned char> Lab2RGB(double L, double A, d
 	tie(r, g, b) = lRGB2RGB(lR, lG, lB);
 
 	return forward_as_tuple(r, g, b);
+}
+
+double get_luminance(unsigned r, unsigned g, unsigned b) {
+	return (r * 299 + g * 587 + b * 114) / (255.0 * 1000);
+}
+
+// CCIR 601 に基づく
+double color_difference(unsigned r1, unsigned g1, unsigned b1, unsigned r2, unsigned g2, unsigned b2) {
+	double luma1 = get_luminance(r1, g1, b1);
+	double luma2 = get_luminance(r2, g2, b2);
+	double lumadiff = luma1 - luma2;
+	double diffR = (r1 - r2) / 255.0, diffG = (g1 - g2) / 255.0, diffB = (b1 - b2) / 255.0;
+	return (diffR * diffR * 0.299 + diffG * diffG * 0.587 + diffB * diffB * 0.114) * 0.75 + lumadiff * lumadiff;
 }
 
 // Luaから呼び出す関数
@@ -578,12 +597,82 @@ int ditherComposer(lua_State *L) {
 	return 0;
 }
 
+// パターンディザ
+int patternDither(lua_State *L) {
+	// 引数の受け取り
+	Pixel_RGBA *pixels = reinterpret_cast<Pixel_RGBA*>(lua_touserdata(L, 1));
+	int w = static_cast<int>(lua_tointeger(L, 2));
+	int h = static_cast<int>(lua_tointeger(L, 3));
+	double threshold = lua_tonumber(L, 4) / 100.0;
+	int N = static_cast<int>(lua_tointeger(L, 5));
+
+	// Median cut によりパレットを生成
+	// rgb_sp を初期化
+	for (int y = 0; y < h; y++) {
+		for (int x = 0; x < w; x++) {
+			int index = x + w * y;
+			unsigned char R, G, B;
+
+			R = static_cast<unsigned char>(pixels[index].r / 0xf);
+			G = static_cast<unsigned char>(pixels[index].g / 0xf);
+			B = static_cast<unsigned char>(pixels[index].b / 0xf);
+
+			rgb_sp[R][G][B]++;
+		}
+	}
+
+	medianCut(N);
+
+	// forループで全ピクセルを処理
+	// xが内側なのは横に操作した方がメモリの効率がよさそうだから
+	for (int y = 0; y < h; y++) {
+		for (int x = 0; x < w; x++) {
+			// 色候補のリセット
+			int index = x + w * y;
+			int peindex = (x % 8) + 8 * (y % 8);
+			Pixel_RGB color_error = {0, 0, 0};
+			vector<Pixel_RGBA> candidate_list(0);
+			// 色候補を生成
+			while (candidate_list.size() < 8 * 8) {
+				Pixel_RGBA attempt = { 0, 0, 0, 0 };
+				attempt.r = static_cast<unsigned char>(pixels[index].r - color_error.r * threshold);
+				attempt.g = static_cast<unsigned char>(pixels[index].g - color_error.g * threshold);
+				attempt.b = static_cast<unsigned char>(pixels[index].b - color_error.b * threshold);
+
+				Pixel_RGBA candidate = { 0 ,0 ,0, 0 };
+				tie(candidate.r, candidate.g, candidate.b) = BestColor(attempt.r, attempt.g, attempt.b, N);
+				candidate_list.push_back(candidate);
+				color_error.r = candidate.r - pixels[index].r;
+				color_error.g = candidate.g - pixels[index].g;
+				color_error.b = candidate.b - pixels[index].b;
+			}
+			// luma を初期化
+			vector<pair<double, int>> luma_list(8 * 8);
+			for (int i = 0; i < 8 * 8; i++) {
+				double luma = get_luminance(candidate_list[i].r, candidate_list[i].g, candidate_list[i].b);
+				luma_list[i] = make_pair(luma, i);
+			}
+			// luma 基準で candidate_list をソート
+			sort(luma_list.begin(), luma_list.end());
+			// 色候補で塗る
+			int candidate_index = luma_list[M[peindex]].second;
+			pixels[index].r = candidate_list[candidate_index].r;
+			pixels[index].g = candidate_list[candidate_index].g;
+			pixels[index].b = candidate_list[candidate_index].b;
+		}
+	}
+
+	// 今回はLua側へ値を返さないので0を返す
+	return 0;
+}
+
 
 static luaL_Reg functions[] = {
 	{"simpleDither", simpleDither},
 	{"degreaseColor", degreaseColor},
 	{"w3c_degreaseColor", degrease2W3C},
 	{"ditherComposer", ditherComposer},
+	{"patternDither", patternDither},
 	{nullptr, nullptr}
 };
 

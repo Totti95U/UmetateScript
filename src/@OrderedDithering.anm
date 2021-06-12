@@ -10,6 +10,33 @@ obj.putpixeldata(data)
 
 obj.effect("拡大率", "拡大率", 100/(1 - obj.track0 * 0.01))
 
+@Pattern Dithering
+--track0:ドットサイズ,0,100,0,0.1
+--track1:ディザ度,0,100,50,0.1
+--track2:色数,2,256,16,1
+
+obj.effect("リサイズ", "拡大率", 100 - obj.track0)
+
+require("OrderedDithering")
+local data, w, h = obj.getpixeldata()
+OrderedDithering.patternDither(data, w, h, obj.track1, obj.track2)
+obj.putpixeldata(data)
+
+obj.effect("拡大率", "拡大率", 100/(1 - obj.track0 * 0.01))
+
+@DitherComposer
+--track0:透明度,0,100,50
+--track1:ドットサイズ,0,100,0,0.1
+
+obj.effect("リサイズ", "拡大率", 100 - obj.track1)
+
+require("OrderedDithering")
+local data, w, h = obj.getpixeldata()
+OrderedDithering.ditherComposer(data, w, h, obj.track0)
+obj.putpixeldata(data)
+
+obj.effect("拡大率", "拡大率", 100/(1 - obj.track1 * 0.01))
+
 @Color Degreasing
 --track0:色数,1,256,16,1
 
@@ -24,16 +51,3 @@ require("OrderedDithering")
 local data, w, h = obj.getpixeldata()
 OrderedDithering.w3c_degreaseColor(data, w, h)
 obj.putpixeldata(data)
-
-@DitherComposer
---track0:透明度,0,100,50
---track1:ドットサイズ,0,100,0,0.1
-
-obj.effect("リサイズ", "拡大率", 100 - obj.track1)
-
-require("OrderedDithering")
-local data, w, h = obj.getpixeldata()
-OrderedDithering.ditherComposer(data, w, h, obj.track0)
-obj.putpixeldata(data)
-
-obj.effect("拡大率", "拡大率", 100/(1 - obj.track1 * 0.01))

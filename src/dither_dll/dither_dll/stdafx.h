@@ -17,8 +17,9 @@
 // stdio
 #include <stdio.h>
 
-// Queue, Tuple ヘッダー ファイル
+// Queue, Tuple, Vector ヘッダー ファイル
 #include <queue>
 #include <tuple>
+#include <vector>
 
 // TODO: プログラムに必要な追加ヘッダーをここで参照してください
