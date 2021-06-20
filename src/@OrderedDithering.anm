@@ -35,7 +35,7 @@ local data, w, h = obj.getpixeldata()
 OrderedDithering.ditherComposer(data, w, h, obj.track0)
 obj.putpixeldata(data)
 
-obj.effect("リサイズ", "拡大率", 100/(1 - obj.track0 * 0.01),"補間なし",1)
+obj.effect("リサイズ", "拡大率", 100/(1 - obj.track1 * 0.01),"補間なし",1)
 
 @Color Degreasing
 --track0:色数,1,256,16,1
