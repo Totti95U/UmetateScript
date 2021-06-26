@@ -440,7 +440,7 @@ tuple<unsigned char, unsigned char, unsigned char> BestColor(unsigned char r, un
 	for (int n = 1; n < N; n++) {
 		double current_dist;
 
-		current_dist = color_difference(r, g, b, pallet[n][1], pallet[n][2], pallet[n][3]);
+		current_dist = color_difference(r, g, b, pallet[n][0], pallet[n][1], pallet[n][2]);
 
 		if (current_dist < best_dist) {
 			best_rgb[0] = pallet[n][0];
@@ -455,13 +455,13 @@ tuple<unsigned char, unsigned char, unsigned char> BestColor(unsigned char r, un
 
 // W3Cで一番近い色を選ぶ
 tuple<unsigned char, unsigned char, unsigned char> Color2W3C(unsigned char r, unsigned char g, unsigned char b) {
-	unsigned char best_rgb[3] = { pallet[0][0], pallet[0][1], pallet[0][2] };
+	unsigned char best_rgb[3] = { W3C[0][0], W3C[0][1], W3C[0][2] };
 	double best_dist = 256.0;
 
 	for (int n = 1; n < 16; n++) {
 		double current_dist;
 
-		current_dist = color_difference(r, g, b, W3C[n][1], W3C[n][2], W3C[n][3]);
+		current_dist = color_difference(r, g, b, W3C[n][0], W3C[n][1], W3C[n][2]);
 
 		if (current_dist < best_dist) {
 			best_rgb[0] = W3C[n][0];
@@ -502,9 +502,9 @@ int degreaseColor(lua_State *L) {
 			double dR, dG, dB;
 
 			tie(dR, dG, dB) = RGB2lRGB(pixels[index].r, pixels[index].g, pixels[index].b);
-			R = static_cast<unsigned char>(15.4 * dR);
-			G = static_cast<unsigned char>(15.4 * dG);
-			B = static_cast<unsigned char>(15.4 * dB);
+			R = static_cast<unsigned char>(15 * dR);
+			G = static_cast<unsigned char>(15 * dG);
+			B = static_cast<unsigned char>(15 * dB);
 
 			rgb_sp[R][G][B]++;
 		}
@@ -604,10 +604,10 @@ int patternDither(lua_State *L) {
 
 			tie(dR, dG, dB) = RGB2lRGB(pixels[index].r, pixels[index].g, pixels[index].b);
 
-			R = static_cast<unsigned char>(15.4 * dR);
-			G = static_cast<unsigned char>(15.4 * dG);
-			B = static_cast<unsigned char>(15.4 * dB);
-
+			R = static_cast<unsigned char>(15 * dR);
+			G = static_cast<unsigned char>(15 * dG);
+			B = static_cast<unsigned char>(15 * dB);
+			
 			rgb_sp[R][G][B]++;
 			red_sp[R]++;
 			green_sp[G]++;
