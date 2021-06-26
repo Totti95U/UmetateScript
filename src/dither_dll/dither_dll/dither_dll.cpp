@@ -434,15 +434,13 @@ void medianCut(unsigned int N) {
 
 // pallet で一番近い色を選ぶ
 tuple<unsigned char, unsigned char, unsigned char> BestColor(unsigned char r, unsigned char g, unsigned char b, int N) {
-	unsigned char best_rgb[3] = { 0xff, 0xff, 0xff };
-	double best_dist = 0xffffff;
+	unsigned char best_rgb[3] = { pallet[0][0], pallet[0][1], pallet[0][2] };
+	double best_dist = 256.0;
 
 	for (int n = 1; n < N; n++) {
-		double current_dist = 0.0;
+		double current_dist;
 
-		for (int i = 0; i < 3; i++) {
-			current_dist += color_difference(r, g, b, pallet[n][1], pallet[n][2], pallet[n][3]);
-		}
+		current_dist = color_difference(r, g, b, pallet[n][1], pallet[n][2], pallet[n][3]);
 
 		if (current_dist < best_dist) {
 			best_rgb[0] = pallet[n][0];
@@ -457,15 +455,13 @@ tuple<unsigned char, unsigned char, unsigned char> BestColor(unsigned char r, un
 
 // W3Cで一番近い色を選ぶ
 tuple<unsigned char, unsigned char, unsigned char> Color2W3C(unsigned char r, unsigned char g, unsigned char b) {
-	unsigned char best_rgb[3] = {0xff, 0xff, 0xff};
-	double best_dist = 0xffffff;
+	unsigned char best_rgb[3] = { pallet[0][0], pallet[0][1], pallet[0][2] };
+	double best_dist = 256.0;
 
-	for (int n = 0; n < 16; n++) {
-		double current_dist = 0.0;
+	for (int n = 1; n < 16; n++) {
+		double current_dist;
 
-		for (int i = 0; i < 3; i++) {
-			current_dist += color_difference(r, g, b, W3C[n][1], W3C[n][2], W3C[n][3]);
-		}
+		current_dist = color_difference(r, g, b, W3C[n][1], W3C[n][2], W3C[n][3]);
 
 		if (current_dist < best_dist) {
 			best_rgb[0] = W3C[n][0];
@@ -506,9 +502,9 @@ int degreaseColor(lua_State *L) {
 			double dR, dG, dB;
 
 			tie(dR, dG, dB) = RGB2lRGB(pixels[index].r, pixels[index].g, pixels[index].b);
-			R = static_cast<unsigned char>(0xf * dR);
-			G = static_cast<unsigned char>(0xf * dG);
-			B = static_cast<unsigned char>(0xf * dB);
+			R = static_cast<unsigned char>(15.4 * dR);
+			G = static_cast<unsigned char>(15.4 * dG);
+			B = static_cast<unsigned char>(15.4 * dB);
 
 			rgb_sp[R][G][B]++;
 		}
@@ -608,9 +604,9 @@ int patternDither(lua_State *L) {
 
 			tie(dR, dG, dB) = RGB2lRGB(pixels[index].r, pixels[index].g, pixels[index].b);
 
-			R = static_cast<unsigned char>(0xf * dR);
-			G = static_cast<unsigned char>(0xf * dG);
-			B = static_cast<unsigned char>(0xf * dB);
+			R = static_cast<unsigned char>(15.4 * dR);
+			G = static_cast<unsigned char>(15.4 * dG);
+			B = static_cast<unsigned char>(15.4 * dB);
 
 			rgb_sp[R][G][B]++;
 			red_sp[R]++;
@@ -632,10 +628,18 @@ int patternDither(lua_State *L) {
 			vector<Pixel_RGBA> candidate_list(0);
 			// 色候補を生成
 			while (candidate_list.size() < 8 * 8) {
-				Pixel_RGBA attempt = { 0, 0, 0, 0 };
-				attempt.r = static_cast<unsigned char>(pixels[index].r - color_error.r * threshold);
-				attempt.g = static_cast<unsigned char>(pixels[index].g - color_error.g * threshold);
-				attempt.b = static_cast<unsigned char>(pixels[index].b - color_error.b * threshold);
+				Pixel_RGB attempt = { 0, 0, 0 };
+				attempt.r = static_cast<int>(1.0 * pixels[index].r - color_error.r * threshold);
+				attempt.g = static_cast<int>(1.0 * pixels[index].g - color_error.g * threshold);
+				attempt.b = static_cast<int>(1.0 * pixels[index].b - color_error.b * threshold);
+				
+				// Bumping
+				attempt.r = attempt.r > 0x00 ? attempt.r : 0x00;
+				attempt.r = attempt.r < 0xff ? attempt.r : 0xff;
+				attempt.g = attempt.g > 0x00 ? attempt.g : 0x00;
+				attempt.g = attempt.g < 0xff ? attempt.g : 0xff;
+				attempt.b = attempt.b > 0x00 ? attempt.b : 0x00;
+				attempt.b = attempt.b < 0xff ? attempt.b : 0xff;
 
 				Pixel_RGBA candidate = { 0 ,0 ,0, 0 };
 				tie(candidate.r, candidate.g, candidate.b) = BestColor(attempt.r, attempt.g, attempt.b, N);
