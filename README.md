@@ -1,4 +1,4 @@
-# DitheringScript
+# UmetateScript
 オブジェクトの透明部分を塗りつぶす AviUtl のスクリプトです。
 
 ダウンロードは[コチラ](https://github.com/Totti95U/UmetateScript/releases)
